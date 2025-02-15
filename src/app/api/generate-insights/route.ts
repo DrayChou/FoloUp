@@ -24,6 +24,8 @@ export async function POST(req: Request, res: Response) {
 
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
+    // 修改 base url
+    baseUrl: process.env.OPENAI_BASE_URL,
     maxRetries: 5,
     dangerouslyAllowBrowser: true,
   });
@@ -52,8 +54,18 @@ export async function POST(req: Request, res: Response) {
     });
 
     const basePromptOutput = baseCompletion.choices[0] || {};
-    const content = basePromptOutput.message?.content || "";
+    let content = basePromptOutput.message?.content || "";
+
+    // 检查是不是 json 结构，如果是 ```json 这样的结构，需要解析
+    if (content.startsWith("```json") && content.endsWith("```")) {
+      content = content.slice(7, content.length - 3);
+    } else if (content.startsWith("```") && content.endsWith("```")) {
+      content = content.slice(3, content.length - 3);
+    }
+
     const insightsResponse = JSON.parse(content);
+
+    console.log("insightsResponse", insightsResponse);
 
     await InterviewService.updateInterview(
       { insights: insightsResponse.insights },

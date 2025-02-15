@@ -33,6 +33,7 @@ export const generateInterviewAnalytics = async (payload: {
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
+      baseUrl: process.env.OPENAI_BASE_URL,
       maxRetries: 5,
       dangerouslyAllowBrowser: true,
     });
@@ -58,8 +59,18 @@ export const generateInterviewAnalytics = async (payload: {
     });
 
     const basePromptOutput = baseCompletion.choices[0] || {};
-    const content = basePromptOutput.message?.content || "";
+    let content = basePromptOutput.message?.content || "";
+
+    // 检查是不是 json 结构，如果是 ```json 这样的结构，需要解析
+    if (content.startsWith("```json") && content.endsWith("```")) {
+      content = content.slice(7, content.length - 3);
+    } else if (content.startsWith("```") && content.endsWith("```")) {
+      content = content.slice(3, content.length - 3);
+    }
+
     const analyticsResponse = JSON.parse(content);
+
+    console.log("Interview analytics generated successfully", analyticsResponse);
 
     analyticsResponse.mainInterviewQuestions = questions.map(
       (q: Question) => q.question,

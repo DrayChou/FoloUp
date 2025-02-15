@@ -31,7 +31,7 @@ export async function POST(req: Request, res: Response) {
       readable_slug: readableSlug,
     });
 
-    logger.info("Interview created successfully");
+    logger.info("Interview created successfully", newInterview);
 
     return NextResponse.json(
       { response: "Interview created successfully" },
